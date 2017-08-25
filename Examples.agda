@@ -1,28 +1,19 @@
-module Verify where
+module Examples where
 
 open import Data.List
-open import Data.String
+open import Data.String hiding (_++_)
+open import Data.Bool
+open import Data.Empty
+open import Data.Unit.Base
+open import Function
+open import Helpers
+open import AST
 
-data OperationType : Set where
-  query : OperationType
-  mutation : OperationType
-  subscription : OperationType
-
-mutual
-  data Selection : Set where
-    field₁ : String -> SelectionSet -> Selection
-    fragmentSpread : Selection
-    inlineFragment : Selection
-  
-  data SelectionSet : Set where
-    selectionSet : List Selection -> SelectionSet
-
-data Definition : Set where
-  operationDefinition : OperationType -> String -> SelectionSet -> Definition
-  fragmentDefinition : Definition
-
-data Document : Set where
-  document : List Definition -> Document
+----------------------------
+-- An valid graphQL query according to specification
+--
+-- https://github.com/facebook/graphql/blob/master/spec/Section%205%20--%20Validation.md
+----------------------------
 
 {-
 query getDogName {
