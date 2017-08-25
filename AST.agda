@@ -22,25 +22,25 @@ mutual
   data Selection : Set where
     field₁ : String -> SelectionSet -> Selection
     field₂ : String -> Selection
-    fragmentSpread : Selection
+    fragmentSpread : String -> Selection
     inlineFragment : Selection
   
   data SelectionSet : Set where
     selectionSet : List Selection -> SelectionSet
 
 data Definition : Set where
-  operationDefinition : OperationType -> String -> (sels : SelectionSet) -> Definition
-  fragmentDefinition : Definition
+  operationDefinition : OperationType -> String -> SelectionSet -> Definition
+  fragmentDefinition : String -> SelectionSet -> Definition
 
 
 definitionName : Definition -> String
 definitionName (operationDefinition x x₁ sels) = x₁
-definitionName fragmentDefinition = ""
+definitionName (fragmentDefinition n sels) = n
 
 selectionName : Selection -> String
 selectionName (field₁ n _) = n
 selectionName (field₂ n) = n
-selectionName fragmentSpread = ""
+selectionName (fragmentSpread n) = ""
 selectionName inlineFragment = ""
 
 assertDocumentValid : List Definition -> Set

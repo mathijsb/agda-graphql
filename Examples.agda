@@ -71,7 +71,8 @@ query getName {
 -}
 
 ----------------------------
--- An invalid graphQL query according to specification
+-- An invalid graphQL query according to specification because both operations have the same name.
+-- Compiling this raises a compiler warning
 ----------------------------
 invalid₁ : Document
 invalid₁ = document (
@@ -93,6 +94,17 @@ invalid₁ = document (
 ----------------------------
 -- A simple query
 ----------------------------
+
+{-
+
+query getDogName {
+  dog {
+    name 
+  }
+}
+
+-}
+
 simple : Document
 simple = document (
   operationDefinition query "getDogName" (selectionSet [
@@ -101,6 +113,74 @@ simple = document (
     ])
   ])
   ∷ [] )
+
+
+----------------------------
+-- A query with a fragment
+----------------------------
+
+{-
+query getName {
+  dog {
+    ...DogFields
+  }
+}
+
+fragment DogField on Dog {
+  name 
+  ... MoreDogFields
+}
+
+fragment MoreDogFields on Dog {
+  favoriteFood 
+}
+-}
+
+fragment : Document
+fragment = document (
+  operationDefinition query "getName" (selectionSet [
+    field₁ "dog" (selectionSet [
+      fragmentSpread "DogField"
+    ])
+  ]) ∷
+  fragmentDefinition "DogField" (selectionSet (
+    (field₂ "name") ∷
+    (fragmentSpread "MoreDogFields") ∷ []
+  )) ∷
+  fragmentDefinition "MoreDogFields"  (selectionSet [
+    field₂ "favoriteFood"
+  ])
+  ∷ [] )
+
+----------------------------
+-- The same query as above after inlining the fragments.
+----------------------------
+
+{-
+
+query getName {
+  dog {
+    name 
+    favoriteFood
+  }
+}
+
+-}
+
+fragmentInlined : Document
+fragmentInlined = document (
+  operationDefinition query "getName" (selectionSet [
+    field₁ "dog" (selectionSet (
+      (field₂ "name") ∷
+      (field₂ "favoriteFood") ∷ []))
+  ])
+  ∷ [] )
+
+----------------------------
+-- Proof the inlined fragment has same outcome as fragment
+----------------------------
+proof₁ : (executeDocument fragment) ≡ (executeDocument fragmentInlined)
+proof₁ = refl
 
 ----------------------------
 -- Some transformation on a graph QL query that should not alter the outcome
@@ -111,5 +191,5 @@ transform d = d
 ----------------------------
 -- Proof that transform does not alter the outcome
 ----------------------------
-proof : (executeDocument simple) ≡ (executeDocument (transform simple))
-proof = refl
+proof₂ : {d : Document} -> (executeDocument d) ≡ (executeDocument (transform d))
+proof₂ = refl
