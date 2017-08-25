@@ -21,6 +21,7 @@ data OperationType : Set where
 mutual
   data Selection : Set where
     field₁ : String -> SelectionSet -> Selection
+    field₂ : String -> Selection
     fragmentSpread : Selection
     inlineFragment : Selection
   
@@ -38,6 +39,7 @@ definitionName fragmentDefinition = ""
 
 selectionName : Selection -> String
 selectionName (field₁ n _) = n
+selectionName (field₂ n) = n
 selectionName fragmentSpread = ""
 selectionName inlineFragment = ""
 
