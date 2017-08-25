@@ -23,7 +23,7 @@ mutual
     field₁ : String -> SelectionSet -> Selection
     field₂ : String -> Selection
     fragmentSpread : String -> Selection
-    inlineFragment : Selection
+    --inlineFragment : Selection
   
   data SelectionSet : Set where
     selectionSet : List Selection -> SelectionSet
@@ -41,12 +41,16 @@ selectionName : Selection -> String
 selectionName (field₁ n _) = n
 selectionName (field₂ n) = n
 selectionName (fragmentSpread n) = ""
-selectionName inlineFragment = ""
+--selectionName inlineFragment = ""
 
 assertDocumentValid : List Definition -> Set
 assertDocumentValid defs with (isSet (map definitionName defs))
 assertDocumentValid defs | true = ⊤
 assertDocumentValid defs | false = ⊥
 
+data Document₁ : Set where
+  document₁ : (defs : List Definition) -> {_ : assertDocumentValid(defs)} -> Document₁
+
 data Document : Set where
-  document : (defs : List Definition) -> {_ : assertDocumentValid(defs)} -> Document
+  document : (defs : List Definition) -> Document
+

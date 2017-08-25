@@ -18,7 +18,6 @@ data JSON : Set where
   JNULL : JSON
   JBoolean : Bool -> JSON
 
-
 findFragment : List Definition -> String -> Maybe Definition
 findFragment [] n = nothing
 findFragment (operationDefinition x x₁ x₂ ∷ frags) n = findFragment frags n
@@ -34,7 +33,7 @@ executeSelectionName frags (fragmentSpread n) with (findFragment frags n)
 executeSelectionName frags (fragmentSpread n) | just (operationDefinition x x₁ x₂) = [ "-" ]
 executeSelectionName frags (fragmentSpread n) | just (fragmentDefinition x (selectionSet x₁)) = (concat $ map (executeSelectionName frags) x₁)
 executeSelectionName frags (fragmentSpread n) | nothing = [ "-" ] -- This should not occur
-executeSelectionName frags inlineFragment = [ "_" ]
+--executeSelectionName frags inlineFragment = [ "_" ]
 
 mutual
   {-# TERMINATING #-}
@@ -45,7 +44,7 @@ mutual
   executeSelection frags (fragmentSpread n) | just (operationDefinition x x₁ x₂) = [ JNULL ] -- This should not occur
   executeSelection frags (fragmentSpread n) | just (fragmentDefinition x (selectionSet x₁)) = (concat $ map (executeSelection frags) x₁)
   executeSelection frags (fragmentSpread n) | nothing = [ JNULL ] -- This should not occur
-  executeSelection frags inlineFragment = [ JNULL ]
+  --executeSelection frags inlineFragment = [ JNULL ]
 
   {-# TERMINATING #-}
   executeSelectionSet : List Definition -> SelectionSet -> JSON

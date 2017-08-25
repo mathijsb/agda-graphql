@@ -5,6 +5,7 @@ open import Data.String hiding (_++_)
 open import Data.Bool
 open import Data.Empty
 open import Data.Unit.Base
+open import Data.Maybe hiding (map)
 open import Function
 open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; cong ; setoid )
 
@@ -74,8 +75,8 @@ query getName {
 -- An invalid graphQL query according to specification because both operations have the same name.
 -- Compiling this raises a compiler warning
 ----------------------------
-invalid₁ : Document
-invalid₁ = document (
+invalid₁ : Document₁
+invalid₁ = document₁ (
   operationDefinition query "getName1" (selectionSet [
     field₁ "dog" (selectionSet [
       field₂ "name"
@@ -183,13 +184,43 @@ proof₁ : (executeDocument fragment) ≡ (executeDocument fragmentInlined)
 proof₁ = refl
 
 ----------------------------
--- Some transformation on a graph QL query that should not alter the outcome
+-- Transformation that inlines fragments in queries. This should not alter the result of
+-- the queries.
 ----------------------------
-transform : Document -> Document
-transform d = d
+{-# TERMINATING #-}
+inlineFragment : Document -> Document
+inlineFragment (document defs) = document (concat (map (transformDefinition defs) defs))
+  where
+    mutual   
+      transformSelection : Selection -> List Selection
+      transformSelection (field₁ x x₁) = [ field₁ x (transformSelectionSet x₁) ] 
+      transformSelection (field₂ x) = [ field₂ x ]
+      transformSelection (fragmentSpread x) with (findFragment defs x)
+      transformSelection (fragmentSpread x) | just (operationDefinition x₁ x₂ (selectionSet x₃)) = [] -- THIS SHOULD NOT HAPPEN
+      transformSelection (fragmentSpread x) | just (fragmentDefinition x₁ (selectionSet x₂)) = concat $ map transformSelection x₂
+      transformSelection (fragmentSpread x) | nothing = [] -- THIS SHOULD NOT HAPPEN
+      --transformSelection inlineFragment = [ inlineFragment ]
+    
+      transformSelectionSet : SelectionSet -> SelectionSet
+      transformSelectionSet (selectionSet x) = selectionSet $ concat $ map transformSelection x
+    
+      transformDefinition : List Definition -> Definition -> List Definition
+      transformDefinition defs₁ (operationDefinition x x₁ x₂) = [ operationDefinition x x₁ (transformSelectionSet x₂) ]
+      transformDefinition defs (fragmentDefinition x x₁) = []
+
 
 ----------------------------
--- Proof that transform does not alter the outcome
+-- Proof that the fragment results in the same fragment as the manually inlined fragment 
 ----------------------------
-proof₂ : {d : Document} -> (executeDocument d) ≡ (executeDocument (transform d))
+proof₂ : (inlineFragment fragment) ≡ fragmentInlined
 proof₂ = refl
+
+----------------------------
+-- Proof that inline transform does not alter the outcome (e.g. proof that the query execution
+-- fragments is correct).
+----------------------------
+proof₃ : {d : Document} -> (executeDocument d) ≡ (executeDocument (inlineFragment d))
+proof₃ = ? 
+--proof₃ {document []} = refl
+--proof₃ {document (operationDefinition x x₁ x₂ ∷ defs)} = {!!}
+--proof₃ {document (fragmentDefinition x x₁ ∷ defs)} = {!!}
