@@ -123,7 +123,7 @@ simple = document (
 {-
 query getName {
   dog {
-    ...DogFields
+    ...DogField
   }
 }
 
@@ -189,9 +189,11 @@ proof₁ = refl
 ----------------------------
 {-# TERMINATING #-}
 inlineFragment : Document -> Document
-inlineFragment (document defs) = document (concat (map (transformDefinition defs) defs))
+inlineFragment (document []) = document []
+inlineFragment (document (x ∷ xs)) = document (concat (map (transformDefinition defs) defs))
   where
-    mutual   
+    mutual
+      defs = (x ∷ xs)
       transformSelection : Selection -> List Selection
       transformSelection (field₁ x x₁) = [ field₁ x (transformSelectionSet x₁) ] 
       transformSelection (field₂ x) = [ field₂ x ]
@@ -208,7 +210,6 @@ inlineFragment (document defs) = document (concat (map (transformDefinition defs
       transformDefinition defs₁ (operationDefinition x x₁ x₂) = [ operationDefinition x x₁ (transformSelectionSet x₂) ]
       transformDefinition defs (fragmentDefinition x x₁) = []
 
-
 ----------------------------
 -- Proof that the fragment results in the same fragment as the manually inlined fragment 
 ----------------------------
@@ -220,7 +221,32 @@ proof₂ = refl
 -- fragments is correct).
 ----------------------------
 proof₃ : {d : Document} -> (executeDocument d) ≡ (executeDocument (inlineFragment d))
-proof₃ = ? 
---proof₃ {document []} = refl
---proof₃ {document (operationDefinition x x₁ x₂ ∷ defs)} = {!!}
---proof₃ {document (fragmentDefinition x x₁ ∷ defs)} = {!!}
+proof₃ {d} = {!!}
+
+
+
+----------------------------
+-- A query calling an undefined fragment
+----------------------------
+
+{-
+query getName {
+  dog {
+    ...DogFields
+  }
+}
+
+fragment DogField on Dog {
+  name 
+  ... MoreDogFields
+}
+-}
+
+fragment1 : Document₁
+fragment1 = document₁ (
+  operationDefinition query "getName" (selectionSet [
+    field₁ "dog" (selectionSet [
+      fragmentSpread "DogField"
+    ])
+  ])
+  ∷ [] )
